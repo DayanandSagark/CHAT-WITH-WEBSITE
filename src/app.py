@@ -9,9 +9,11 @@ def get_response(usr_input):
 # APP CONFIG
 st.set_page_config(page_title="Chat with websites", page_icon = "hello")
 st.title("Chat with websites")
-chat_history = [
-    AIMessage(content="Hi Iam Dayabot. How can I help you?"),
-]
+# session_state is the variable will persist the chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = [
+        AIMessage(content="Hi Iam Dayabot. How can I help you?"),
+        ]
 
 # SIDE BAR
 with st.sidebar:
@@ -24,8 +26,8 @@ with st.sidebar:
 usr_qry = st.chat_input("Enter your message here ...")
 if usr_qry is not None and usr_qry != "":
     response = get_response(usr_qry)
-    chat_history.append(HumanMessage(content=usr_qry))
-    chat_history.append(AIMessage(content=response))
+    st.session_state.chat_history.append(HumanMessage(content=usr_qry))
+    st.session_state.chat_history.append(AIMessage(content=response))
 
     #with st.chat_message("Human"):
      #   st.write(usr_qry)
@@ -33,7 +35,7 @@ if usr_qry is not None and usr_qry != "":
      #   st.write("I dont know..")
 
 with st.sidebar:
-    st .write(chat_history)
+    st.write(st.session_state.chat_history)
 
 
 
