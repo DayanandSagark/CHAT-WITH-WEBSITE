@@ -6,6 +6,9 @@ from bs4 import BeautifulSoup
 from langchain_core.messages import AIMessage,HumanMessage
 # Added lang chain community document loaders - webbased loader
 from langchain_community.document_loaders import WebBaseLoader
+# Add recursive char text splitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
 
 
 def get_response(usr_input):
@@ -14,8 +17,10 @@ def get_response(usr_input):
 def get_vectorstore_from_url(url):
     #get the text in document form 
     loader = WebBaseLoader(url)
-    documents = loader.load()
-    return documents
+    document = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter()
+    document_chunks = text_splitter.split_documents(document)
+    return document_chunks
 
 # APP CONFIG
 st.set_page_config(page_title="Chat with websites", page_icon = "hello")
@@ -37,9 +42,9 @@ if website_url is None or website_url == "":
 
 else:
     #pass the web url for the document form
-    documents = get_vectorstore_from_url(website_url)
+    document_chunks = get_vectorstore_from_url(website_url)
     with st.sidebar:
-        st.write(documents)
+        st.write(document_chunks)
     # Create input prompts for your website
     # User input
     usr_qry = st.chat_input("Enter your message here ...")
