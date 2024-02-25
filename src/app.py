@@ -1,10 +1,21 @@
 
 import streamlit as st
-# Added langchain_core
+import bs4
+from bs4 import BeautifulSoup
+# Added langchain_core - chat messages
 from langchain_core.messages import AIMessage,HumanMessage
+# Added lang chain community document loaders - webbased loader
+from langchain_community.document_loaders import WebBaseLoader
+
 
 def get_response(usr_input):
     return "I don't know"
+
+def get_vectorstore_from_url(url):
+    #get the text in document form 
+    loader = WebBaseLoader(url)
+    documents = loader.load()
+    return documents
 
 # APP CONFIG
 st.set_page_config(page_title="Chat with websites", page_icon = "hello")
@@ -20,22 +31,34 @@ with st.sidebar:
     st.header("Settings")
     website_url = st.text_input("Website URL pls..")
 
+# validating the input website url not none
+if website_url is None or website_url == "":
+    st.info("Please enter website url")
 
-# Create input prompts for your website
-# User input
-usr_qry = st.chat_input("Enter your message here ...")
-if usr_qry is not None and usr_qry != "":
-    response = get_response(usr_qry)
-    st.session_state.chat_history.append(HumanMessage(content=usr_qry))
-    st.session_state.chat_history.append(AIMessage(content=response))
+else:
+    #pass the web url for the document form
+    documents = get_vectorstore_from_url(website_url)
+    with st.sidebar:
+        st.write(documents)
+    # Create input prompts for your website
+    # User input
+    usr_qry = st.chat_input("Enter your message here ...")
+    if usr_qry is not None and usr_qry != "":
+        response = get_response(usr_qry)
+        st.session_state.chat_history.append(HumanMessage(content=usr_qry))
+        st.session_state.chat_history.append(AIMessage(content=response))
+        
+    #Conversation
+    for message in st.session_state.chat_history:
+        if isinstance(message,AIMessage):
+            with st.chat_message("AI"):
+                st.write(message.content)
+        if isinstance(message,HumanMessage):
+            with st.chat_message("Human"):
+                st.write(message.content)  
 
-    #with st.chat_message("Human"):
-     #   st.write(usr_qry)
-    #with st.chat_message("AI"):
-     #   st.write("I dont know..")
-
-with st.sidebar:
-    st.write(st.session_state.chat_history)
+    #with st.sidebar:
+    #    st.write(st.session_state.chat_history)
 
 
 
