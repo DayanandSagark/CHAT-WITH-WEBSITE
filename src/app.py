@@ -61,7 +61,16 @@ def get_coverstaional_rag_chain(retriver_chain):
     return create_retrieval_chain(retriver_chain,stuff_documents_chain)
 
 def get_response(usr_input):
-    return "I don't know"
+    #return "I don't know"
+    retriever_chain = get_context_retrieval_chain(st.session_state.vector_store)
+    conversation_rag_chain = get_coverstaional_rag_chain(retriever_chain)
+
+    response = conversation_rag_chain.invoke({
+        "chat_history" : st.session_state.chat_history,
+        "input" : usr_qry
+    })
+    
+    return response['answer']
 
 # APP CONFIG
 st.set_page_config(page_title="Chat with websites", page_icon = "hello")
@@ -89,29 +98,29 @@ else:
     #vector_store = get_vectorstore_from_url(website_url)
     # create conversational chain
         #1. first the reriver chain is created and then 2. that is passed to conversational chain
-    retriever_chain = get_context_retrieval_chain(st.session_state.vector_store)
-    conversation_rag_chain = get_coverstaional_rag_chain(retriever_chain)
+    #retriever_chain = get_context_retrieval_chain(st.session_state.vector_store)
+    #conversation_rag_chain = get_coverstaional_rag_chain(retriever_chain)
     #with st.sidebar:
      #   st.write(document_chunks)
     # Create input prompts for your website
     # User input
     usr_qry = st.chat_input("Enter your message here ...")
     if usr_qry is not None and usr_qry != "":
-        #response = get_response(usr_qry)
-        response = conversation_rag_chain.invoke({
-            "chat_history" : st.session_state.chat_history,
-            "input" : usr_qry,
+        response = get_response(usr_qry)
+        #response = conversation_rag_chain.invoke({
+        #    "chat_history" : st.session_state.chat_history,
+        #    "input" : usr_qry,
 
-        })
-        st.write(response)
-        #st.session_state.chat_history.append(HumanMessage(content=usr_qry))
-        #st.session_state.chat_history.append(AIMessage(content=response))
-
-        retrieved_documents = retriever_chain.invoke({
-            "chat_history" : st.session_state.chat_history,
-             "input" : usr_qry
-        })
-        st.write(retrieved_documents)
+        #})
+        #st.write(response)
+        st.session_state.chat_history.append(HumanMessage(content=usr_qry))
+        st.session_state.chat_history.append(AIMessage(content=response))
+        # tested for retrieval documents
+        #retrieved_documents = retriever_chain.invoke({
+        #    "chat_history" : st.session_state.chat_history,
+         #    "input" : usr_qry
+        #})
+        #st.write(retrieved_documents)
         
     #Conversation
     for message in st.session_state.chat_history:
