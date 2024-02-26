@@ -23,10 +23,6 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 load_dotenv()
 
 
-
-def get_response(usr_input):
-    return "I don't know"
-
 def get_vectorstore_from_url(url):
     #get the text in document form 
     loader = WebBaseLoader(url)
@@ -62,15 +58,16 @@ def get_coverstaional_rag_chain(retriver_chain):
 
     ])
     stuff_documents_chain = create_stuff_documents_chain(llm,prompt)
-    create_retrieval_chain(retriver_chain,stuff_documents_chain)
+    return create_retrieval_chain(retriver_chain,stuff_documents_chain)
+
+def get_response(usr_input):
+    return "I don't know"
+
 # APP CONFIG
 st.set_page_config(page_title="Chat with websites", page_icon = "hello")
 st.title("Chat with websites")
 # session_state is the variable will persist the chat history
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [
-        AIMessage(content="Hi Iam Dayabot. How can I help you?"),
-        ]
+
 
 # SIDE BAR
 with st.sidebar:
@@ -82,21 +79,36 @@ if website_url is None or website_url == "":
     st.info("Please enter website url")
 
 else:
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = [
+            AIMessage(content="Hi Iam Dayabot. How can I help you?"),
+            ]
+    if "vector_store" not in st.session_state:
+        st.session_state.vector_store = get_vectorstore_from_url(website_url)
     #pass the web url for the document form
-    vector_store = get_vectorstore_from_url(website_url)
-    retriever_chain = get_context_retrieval_chain(vector_store)
+    #vector_store = get_vectorstore_from_url(website_url)
+    # create conversational chain
+        #1. first the reriver chain is created and then 2. that is passed to conversational chain
+    retriever_chain = get_context_retrieval_chain(st.session_state.vector_store)
+    conversation_rag_chain = get_coverstaional_rag_chain(retriever_chain)
     #with st.sidebar:
      #   st.write(document_chunks)
     # Create input prompts for your website
     # User input
     usr_qry = st.chat_input("Enter your message here ...")
     if usr_qry is not None and usr_qry != "":
-        response = get_response(usr_qry)
-        st.session_state.chat_history.append(HumanMessage(content=usr_qry))
-        st.session_state.chat_history.append(AIMessage(content=response))
+        #response = get_response(usr_qry)
+        response = conversation_rag_chain.invoke({
+            "chat_history" : st.session_state.chat_history,
+            "input" : usr_qry,
+
+        })
+        st.write(response)
+        #st.session_state.chat_history.append(HumanMessage(content=usr_qry))
+        #st.session_state.chat_history.append(AIMessage(content=response))
 
         retrieved_documents = retriever_chain.invoke({
-            "chat+history" : st.session_state.chat_history,
+            "chat_history" : st.session_state.chat_history,
              "input" : usr_qry
         })
         st.write(retrieved_documents)
