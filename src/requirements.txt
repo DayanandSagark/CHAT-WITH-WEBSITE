@@ -4,3 +4,5 @@ langchain-openai
 beautifulsoup4
 python-dotenv
 chromadb
+#Added for chromadb streamlit issue
+pysqlite3-binary
