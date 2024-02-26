@@ -21,7 +21,7 @@ from langchain.chains import create_history_aware_retriever,create_retrieval_cha
 from langchain.chains.combine_documents import create_stuff_documents_chain
 
 load_dotenv()
-
+OPEN_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 def get_vectorstore_from_url(url):
     #get the text in document form 
